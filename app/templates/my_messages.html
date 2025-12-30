@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>
+                <i class="bi bi-chat-dots me-2"></i>
+                我的消息
+            </h2>
+            <p class="text-muted mt-2">与卖家的沟通记录</p>
+        </div>
+    </div>
+
+    {% if conversations %}
+    <div class="row">
+        <div class="col-12">
+            {% for conv in conversations %}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <img src="{{ conv.product.image_url }}" 
+                                 class="img-fluid rounded" 
+                                 alt="{{ conv.product.title }}"
+                                 style="max-height: 100px; object-fit: cover;">
+                        </div>
+                        <div class="col-md-7">
+                            <h5 class="mb-2">{{ conv.product.title }}</h5>
+                            <p class="text-muted mb-1">
+                                <i class="bi bi-person"></i> 
+                                与 <strong>{{ conv.other_user.username }}</strong> 的对话
+                            </p>
+                            <p class="mb-0 text-truncate">
+                                <small class="text-muted">
+                                    最后消息: {{ conv.last_message.content[:50] }}...
+                                </small>
+                            </p>
+                            <small class="text-muted">
+                                {{ conv.last_message.created_at.strftime('%Y-%m-%d %H:%M') }}
+                            </small>
+                        </div>
+                        <div class="col-md-3 text-end d-flex flex-column justify-content-center">
+                            {% if conv.unread_count > 0 %}
+                            <span class="badge bg-danger mb-2">{{ conv.unread_count }} 条未读</span>
+                            {% endif %}
+                            <a href="{{ url_for('buyer.product_detail', product_id=conv.product.id) }}" 
+                               class="btn btn-primary btn-sm">
+                                查看对话
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-chat-dots display-1 text-muted"></i>
+        <p class="text-muted mt-3">暂无消息记录</p>
+        <a href="{{ url_for('buyer.index') }}" class="btn btn-primary">去逛逛</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

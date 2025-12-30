@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-5 col-lg-4">
+        <div class="card p-4 p-md-5">
+            <div class="text-center mb-5">
+                <i class="bi bi-grid-1x2-fill fs-1 text-primary mb-3"></i>
+                <h3 class="fw-bold">欢迎回来</h3>
+                <p class="text-muted small">登录以管理您的商品与悬赏</p>
+            </div>
+
+            <form method="post">
+                {{ form.hidden_tag() }}
+                
+                <div class="form-floating mb-3">
+                    {{ form.username(class="form-control bg-light border-0", placeholder="用户名") }}
+                    {{ form.username.label(class="text-muted") }}
+                </div>
+                
+                <div class="form-floating mb-4">
+                    {{ form.password(class="form-control bg-light border-0", placeholder="密码") }}
+                    {{ form.password.label(class="text-muted") }}
+                </div>
+
+                <div class="d-grid gap-3">
+                    {{ form.submit(class="btn btn-primary py-3 rounded-pill fw-bold") }}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light text-dark border-0 py-3 rounded-pill">
+                        没有账号？<span class="text-primary fw-bold">去注册</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

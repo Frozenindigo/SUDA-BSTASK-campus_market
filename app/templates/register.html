@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center mt-5">
+    <div class="col-md-6 col-lg-5">
+        <div class="card p-4 p-md-5">
+            <div class="text-center mb-5">
+                <h3 class="fw-bold">加入 CampusMarket</h3>
+                <p class="text-muted small">开启您的校园交易之旅</p>
+            </div>
+            
+            <form method="post">
+                {{ form.hidden_tag() }}
+                
+                <div class="form-floating mb-3">
+                    {{ form.username(class="form-control bg-light border-0", placeholder="设置用户名") }}
+                    {{ form.username.label(class="text-muted") }}
+                </div>
+                
+                <div class="form-floating mb-4">
+                    {{ form.password(class="form-control bg-light border-0", placeholder="设置密码") }}
+                    {{ form.password.label(class="text-muted") }}
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold small text-muted text-uppercase mb-3">选择身份</label>
+                    <div class="d-flex gap-2">
+                        {% for subfield in form.role %}
+                        <div class="flex-fill">
+                            <input type="radio" class="btn-check" name="{{ form.role.name }}" id="{{ subfield.id }}" value="{{ subfield.data }}" {% if loop.first %}checked{% endif %}>
+                            <label class="btn btn-outline-light text-dark w-100 border py-3 rounded-3 h-100" for="{{ subfield.id }}">
+                                <div class="fw-bold">{{ subfield.label.text }}</div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    {{ form.submit(class="btn btn-primary py-3 rounded-pill fw-bold") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

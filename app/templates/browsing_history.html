@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="bi bi-clock-history me-2"></i>
+                    浏览历史
+                </h2>
+                {% if history_records %}
+                <form action="{{ url_for('buyer.clear_history') }}" method="POST" onsubmit="return confirm('确定要清空浏览历史吗？');">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash3"></i> 清空历史
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            <p class="text-muted mt-2">查看您最近浏览过的商品</p>
+        </div>
+    </div>
+
+    {% if history_records %}
+    <div class="row g-4">
+        {% for record in history_records %}
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm hover-lift">
+                <div class="position-relative">
+                    <img src="{{ record.product.image_url }}" 
+                         class="card-img-top" 
+                         alt="{{ record.product.title }}"
+                         style="height: 200px; object-fit: cover;">
+                    {% if record.product.status != 1 %}
+                    <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center">
+                        <span class="badge bg-secondary">已下架</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title text-truncate">{{ record.product.title }}</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-danger fw-bold">¥{{ record.product.price }}</span>
+                        <span class="badge bg-light text-dark">
+                            {% if record.product.category == 'second' %}二手闲置
+                            {% elif record.product.category == 'creative' %}校园文创
+                            {% else %}助农特产{% endif %}
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-2">
+                        <i class="bi bi-clock"></i> 
+                        浏览于 {{ record.viewed_at.strftime('%m-%d %H:%M') }}
+                    </p>
+                    <a href="{{ url_for('buyer.product_detail', product_id=record.product.id) }}" 
+                       class="btn btn-sm btn-primary w-100">
+                        查看详情
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-clock-history display-1 text-muted"></i>
+        <p class="text-muted mt-3">暂无浏览历史</p>
+        <a href="{{ url_for('buyer.index') }}" class="btn btn-primary">去逛逛</a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.hover-lift {
+    transition: transform 0.2s;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+}
+</style>
+{% endblock %}

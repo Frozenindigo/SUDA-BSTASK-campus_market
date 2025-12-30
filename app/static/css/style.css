@@ -1,1 +1,166 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&display=swap');
 
+:root {
+    --bg-color: #0f172a;      /* 深空蓝黑背景 (Awwwards 常用暗色调) */
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --primary: #6366f1;       /* 靛蓝 neon */
+    --accent: #10b981;        /* 荧光绿 */
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --radius: 24px;
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: 'Outfit', sans-serif; /* 使用现代几何字体 */
+    color: var(--text-main);
+    background-image: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
+                      radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.15), transparent 25%);
+    min-height: 100vh;
+}
+
+/* ============ 导航栏：悬浮胶囊 ============ */
+.navbar {
+    background: rgba(15, 23, 42, 0.6) !important;
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 20px 0;
+}
+.navbar-brand {
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: -1px;
+}
+
+/* ============ 卡片：磨砂玻璃 + 霓虹边框 ============ */
+.card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    color: white;
+}
+.card:hover {
+    transform: translateY(-8px) scale(1.01);
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.1), 0 8px 10px -6px rgba(99, 102, 241, 0.1);
+}
+
+/* ============ 按钮：流光溢彩 ============ */
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border: none;
+    border-radius: 100px;
+    padding: 12px 32px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+.btn-primary:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+}
+
+/* ============ 支付模态框 (Payment Modal) ============ */
+.modal-content {
+    background: #1e293b;
+    color: white;
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.credit-card-bg {
+    background: linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    color: white;
+    font-family: 'Courier New', monospace;
+}
+
+/* ============ 评价星星 ============ */
+.star-rating { color: #fbbf24; }
+.seller-badge {
+    background: rgba(255,255,255,0.1);
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+/* ================== 🚑 紧急修复：文字颜色高对比度补丁 🚑 ================== */
+
+/* 1. 强制全局文字变白 */
+body, p, span, div, li {
+    color: #e2e8f0; /* 亮灰白，比纯白柔和一点 */
+}
+
+/* 2. 强制所有标题变纯白 */
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6, .card-title {
+    color: #ffffff !important;
+    font-weight: 700;
+}
+
+/* 3. 修复 Bootstrap 的 .text-muted (原本是深灰，改浅灰) */
+.text-muted, .small {
+    color: #94a3b8 !important; /* 浅蓝灰，在黑底上看得清 */
+}
+
+/* 4. 修复卡片内部文字 */
+.card {
+    color: #ffffff;
+}
+
+/* 5. 修复导航栏链接 */
+.navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+.navbar-nav .nav-link:hover, .navbar-nav .nav-link.active {
+    color: #ffffff !important;
+    text-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+/* 6. 修复输入框 (变成深色底白字) */
+.form-control, .form-select, .input-group-text {
+    background-color: rgba(15, 23, 42, 0.6) !important; /* 深色半透明底 */
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important; /* 输入的字变白 */
+}
+
+.form-control:focus {
+    background-color: rgba(15, 23, 42, 0.9) !important;
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25);
+}
+
+/* 输入框里的提示文字 (Placeholder) 改浅 */
+::placeholder {
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* 7. 修复下拉菜单 (Dropdown) */
+.dropdown-menu {
+    background-color: #1e293b !important; /* 深蓝灰底 */
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.dropdown-item {
+    color: #e2e8f0 !important;
+}
+.dropdown-item:hover {
+    background-color: #334155 !important;
+    color: #ffffff !important;
+}
+
+/* 8. 修复表格文字 */
+.table {
+    color: #e2e8f0 !important;
+}
+.table thead th {
+    color: #94a3b8;
+    border-bottom-color: rgba(255,255,255,0.1);
+}
+.table td, .table th {
+    border-bottom-color: rgba(255,255,255,0.05);
+}

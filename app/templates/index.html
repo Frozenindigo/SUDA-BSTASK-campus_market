@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row align-items-center mb-5 py-5">
+    <div class="col-lg-7">
+        <span class="badge rounded-pill px-3 py-2 mb-3" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);">
+            🚀 苏大专属 · Web3.0 风格交易平台
+        </span>
+        <h1 class="display-3 fw-bolder mb-3" style="line-height: 1.1; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            让闲置<br>更有价值
+        </h1>
+        <p class="lead text-muted mb-4" style="max-width: 500px;">
+            连接每一位校友的创意与热爱。在这里，交易不仅仅是买卖，更是信任的传递。
+        </p>
+        
+        <div class="d-flex gap-4 mb-4">
+            <div>
+                <div class="fs-3 fw-bold text-white">{{ product_count }}+</div>
+                <div class="small text-muted">好物上架</div>
+            </div>
+            <div class="border-start border-secondary mx-2"></div>
+            <div>
+                <div class="fs-3 fw-bold text-white">{{ bounty_count }}+</div>
+                <div class="small text-muted">求购需求</div>
+            </div>
+            <div class="border-start border-secondary mx-2"></div>
+            <div>
+                <div class="fs-3 fw-bold text-white">{{ user_count }}+</div>
+                <div class="small text-muted">校友加入</div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-3">
+            <a href="#market" class="btn btn-primary btn-lg shadow-lg">开始探索</a>
+            <a href="{{ url_for('buyer.post_bounty') }}" class="btn btn-outline-light btn-lg rounded-pill px-4" style="border-color: rgba(255,255,255,0.2);">发布求购</a>
+        </div>
+    </div>
+    
+    <div class="col-lg-5 d-none d-lg-block">
+        <div class="row g-3">
+            <div class="col-6" style="margin-top: 40px;">
+                <a href="{{ url_for('seller.dashboard') }}" class="card text-decoration-none h-100 p-4 text-center">
+                    <div class="display-4 mb-3">🏪</div>
+                    <h5 class="fw-bold text-white">我是卖家</h5>
+                    <p class="small text-muted">一键开店，赚取收益</p>
+                </a>
+            </div>
+            <div class="col-6">
+                <a href="#market" class="card text-decoration-none h-100 p-4 text-center" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.4);">
+                    <div class="display-4 mb-3">🛍️</div>
+                    <h5 class="fw-bold text-white">我是买家</h5>
+                    <p class="small text-muted">淘遍校园，发布心愿</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="market" class="row g-5">
+    <div class="col-lg-8">
+        <!-- 搜索和筛选栏 -->
+        <div class="card mb-4 p-3">
+            {% if query or category or min_price or max_price or sort_by != 'latest' %}
+            <div class="alert alert-info alert-dismissible fade show mb-3 py-2" role="alert">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="small">
+                        <strong>当前筛选：</strong>
+                        {% if query %}<span class="badge bg-primary me-1">搜索: {{ query }}</span>{% endif %}
+                        {% if category %}<span class="badge bg-primary me-1">分类: {{ {'second':'二手闲置','creative':'校园文创','agri':'助农特产'}[category] }}</span>{% endif %}
+                        {% if min_price or max_price %}
+                        <span class="badge bg-primary me-1">
+                            价格: 
+                            {% if min_price %}¥{{ min_price }}{% else %}¥0{% endif %} - 
+                            {% if max_price %}¥{{ max_price }}{% else %}不限{% endif %}
+                        </span>
+                        {% endif %}
+                        {% if sort_by != 'latest' %}
+                        <span class="badge bg-primary me-1">
+                            排序: {{ {'price_asc':'价格↑','price_desc':'价格↓'}[sort_by] }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('buyer.index') }}" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-x-lg me-1"></i>清除所有
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            <form method="GET" action="{{ url_for('buyer.index') }}" id="filterForm">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted mb-1">搜索商品</label>
+                        <input type="text" name="q" class="form-control form-control-sm" placeholder="输入商品名称..." value="{{ query }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-1">分类</label>
+                        <select name="category" class="form-select form-select-sm">
+                            <option value="">全部分类</option>
+                            <option value="second" {% if category == 'second' %}selected{% endif %}>二手闲置</option>
+                            <option value="creative" {% if category == 'creative' %}selected{% endif %}>校园文创</option>
+                            <option value="agri" {% if category == 'agri' %}selected{% endif %}>助农特产</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted mb-1">最低价</label>
+                        <input type="number" name="min_price" class="form-control form-control-sm" placeholder="0" value="{{ min_price }}" min="0" step="0.01">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted mb-1">最高价</label>
+                        <input type="number" name="max_price" class="form-control form-control-sm" placeholder="不限" value="{{ max_price }}" min="0" step="0.01">
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label small text-muted mb-1">&nbsp;</label>
+                        <div class="d-flex flex-column gap-1">
+                            <button type="submit" class="btn btn-primary btn-sm w-100">筛选</button>
+                            <a href="{{ url_for('buyer.index') }}" class="btn btn-outline-secondary btn-sm w-100" title="重置所有筛选条件">
+                                <i class="bi bi-arrow-clockwise me-1"></i>重置
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" name="sort_by" id="sortByInput" value="{{ sort_by }}">
+            </form>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold text-white m-0">🔥 热门好物</h3>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-light rounded-pill px-3 {% if sort_by == 'latest' %}active{% endif %}" onclick="setSort('latest')">最新</button>
+                <button class="btn btn-sm btn-outline-light rounded-pill px-3 {% if sort_by == 'price_asc' %}active{% endif %}" onclick="setSort('price_asc')">价格↑</button>
+                <button class="btn btn-sm btn-outline-light rounded-pill px-3 {% if sort_by == 'price_desc' %}active{% endif %}" onclick="setSort('price_desc')">价格↓</button>
+            </div>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            {% for p in products %}
+            <div class="col">
+                <div class="card h-100 overflow-hidden group">
+                    <div class="position-relative" style="height: 220px;">
+                        <img src="{{ p.image_url }}" class="w-100 h-100" style="object-fit: cover; transition: transform 0.5s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                        <span class="position-absolute top-0 start-0 m-3 badge bg-dark bg-opacity-75 backdrop-blur px-3 py-2 rounded-pill">
+                            {{ {'agri':'助农','creative':'文创','second':'二手'}[p.category] }}
+                        </span>
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-truncate text-white">{{ p.title }}</h5>
+                        <p class="small text-muted mb-3 text-truncate">{{ p.attributes.get('desc', '暂无描述') }}</p>
+                        
+                        <div class="mt-auto d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
+                            <span class="fs-5 fw-bold text-white">¥ {{ p.price }}</span>
+                            <a href="{{ url_for('buyer.product_detail', product_id=p.id) }}" class="btn btn-sm btn-primary rounded-pill px-4">
+                                详情
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <p class="text-muted">暂时还没有商品，快去发布第一个吧！</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if pagination.pages > 1 %}
+        <nav aria-label="商品分页" class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('buyer.index', page=pagination.prev_num, q=query, category=category, min_price=min_price, max_price=max_price, sort_by=sort_by) }}" aria-label="上一页">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                </li>
+                {% endif %}
+                
+                {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        {% if page_num == pagination.page %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('buyer.index', page=page_num, q=query, category=category, min_price=min_price, max_price=max_price, sort_by=sort_by) }}">{{ page_num }}</a>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('buyer.index', page=pagination.next_num, q=query, category=category, min_price=min_price, max_price=max_price, sort_by=sort_by) }}" aria-label="下一页">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                </li>
+                {% endif %}
+            </ul>
+            <div class="text-center text-muted small mt-2">
+                显示第 {{ pagination.page }} / {{ pagination.pages }} 页，共 {{ pagination.total }} 件商品
+            </div>
+        </nav>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="sticky-top" style="top: 100px;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold text-white m-0">✨ 许愿池</h4>
+                <a href="{{ url_for('buyer.post_bounty') }}" class="text-decoration-none small text-primary">更多 ></a>
+            </div>
+
+            {% for b in bounties %}
+            <div class="card mb-3 p-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-{% if b.status == 0 %}warning{% elif b.status == 1 %}primary{% else %}success{% endif %} text-dark">
+                        {% if b.status == 0 %}待接单{% elif b.status == 1 %}沟通中{% elif b.status == 2 %}已完成{% else %}已取消{% endif %}
+                    </span>
+                    <span class="fw-bold" style="color: #fbbf24;">¥ {{ b.budget }}</span>
+                </div>
+                <h6 class="fw-bold text-white mb-2">{{ b.title }}</h6>
+                <p class="text-muted small mb-2">
+                    <i class="bi bi-person-circle"></i> {{ b.author.username }}
+                </p>
+                <p class="text-muted small mb-3 text-truncate">{{ b.desc or '暂无详细描述...' }}</p>
+                
+                {% if current_user.is_authenticated %}
+                    {% if b.user_id == current_user.id %}
+                        <a href="{{ url_for('buyer.my_bounties') }}" class="btn btn-outline-secondary btn-sm w-100 rounded-pill">
+                            查看我的悬赏
+                        </a>
+                    {% elif b.status == 0 %}
+                        <button class="btn btn-outline-primary btn-sm w-100 rounded-pill" onclick="acceptBounty({{ b.id }})">
+                            <i class="bi bi-hand-thumbs-up"></i> 接单赚赏金
+                        </button>
+                    {% elif b.accepter_id == current_user.id %}
+                        <a href="{{ url_for('buyer.bounty_chat', bounty_id=b.id) }}" class="btn btn-primary btn-sm w-100 rounded-pill">
+                            <i class="bi bi-chat-dots"></i> 进入沟通
+                        </a>
+                    {% else %}
+                        <button class="btn btn-secondary btn-sm w-100 rounded-pill opacity-50" disabled>
+                            {% if b.status == 1 %}沟通中{% elif b.status == 2 %}已完成{% else %}已取消{% endif %}
+                        </button>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-sm w-100 rounded-pill">
+                        登录后接单
+                    </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+/* 局部样式修正：针对 Hero 区域的文字颜色 */
+.display-3, .display-4 {
+    letter-spacing: -1px;
+}
+.backdrop-blur {
+    backdrop-filter: blur(4px);
+}
+/* 分页样式 */
+.pagination .page-link {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+.pagination .page-link:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+}
+.pagination .page-item.active .page-link {
+    background-color: var(--primary, #6366f1);
+    border-color: var(--primary, #6366f1);
+}
+.pagination .page-item.disabled .page-link {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+}
+</style>
+
+<script>
+function setSort(sortValue) {
+    document.getElementById('sortByInput').value = sortValue;
+    document.getElementById('filterForm').submit();
+}
+</script>
+
+<script>
+function acceptBounty(bountyId) {
+    if (!confirm('确定要接这个悬赏单吗？接单后将进入与发布者的沟通页面。')) {
+        return;
+    }
+    
+    fetch(`/accept_bounty/${bountyId}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.href = `/bounty_chat/${bountyId}`;
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('接单失败，请重试');
+    });
+}
+</script>
+{% endblock %}
