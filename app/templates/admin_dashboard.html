@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold m-0">系统概览</h3>
+        <p class="text-muted small m-0">Welcome back, Administrator.</p>
+    </div>
+    <span class="badge bg-dark rounded-pill px-3 py-2">系统运行正常</span>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white h-100 border-0 shadow-lg" style="background: linear-gradient(135deg, #2563EB, #1D4ED8);">
+            <div class="card-body">
+                <div class="opacity-50 mb-2 small">总交易额 (GMV)</div>
+                <div class="display-6 fw-bold">¥{{ total_sales }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 border-0">
+            <div class="card-body">
+                <div class="text-muted mb-2 small">注册用户</div>
+                <div class="fs-2 fw-bold">{{ user_count }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 border-0">
+            <div class="card-body">
+                <div class="text-muted mb-2 small">商品总数</div>
+                <div class="fs-2 fw-bold">{{ product_count }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 border-0">
+            <div class="card-body">
+                <div class="text-muted mb-2 small">待处理悬赏</div>
+                <div class="fs-2 fw-bold">{{ bounty_count }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-4">交易趋势</h6>
+                <div id="mainChart" style="width: 100%; height: 320px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-4">类目占比</h6>
+                <div id="pieChart" style="width: 100%; height: 320px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-transparent border-0 pt-4 px-4">
+        <h5 class="fw-bold m-0">违规监管</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">商品</th>
+                    <th>卖家</th>
+                    <th>价格</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ p.image_url }}" class="rounded me-2" width="32" height="32">
+                            <span class="fw-bold small">{{ p.title }}</span>
+                        </div>
+                    </td>
+                    <td><small>{{ p.seller.username }}</small></td>
+                    <td><small>¥{{ p.price }}</small></td>
+                    <td>
+                        <a href="{{ url_for('admin.delete_product', id=p.id) }}" class="btn btn-sm btn-link text-danger text-decoration-none p-0" onclick="return confirm('确认下架？')">
+                            强制下架
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script>
+    // ... 这里放你之前的 ECharts 初始化代码 ...
+    // 为了美观，建议把 Grid 上下左右留白调大一点
+    var chartDom = document.getElementById('mainChart');
+    var myChart = echarts.init(chartDom);
+    var option = {
+        grid: { top: 20, right: 20, bottom: 20, left: 40, containLabel: true },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], axisLine: {show: false}, axisTick: {show: false} },
+        yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed' } } },
+        series: [{ data: [120, 200, 150, 80, 70, 110, 130], type: 'line', smooth: true, itemStyle: {color: '#2563EB'}, areaStyle: {color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{offset: 0, color: '#2563EB66'}, {offset: 1, color: '#2563EB00'}])} }]
+    };
+    myChart.setOption(option);
+
+    var pieDom = document.getElementById('pieChart');
+    var pieChart = echarts.init(pieDom);
+    var pieOption = {
+        series: [{
+            type: 'pie', radius: ['40%', '70%'], itemStyle: { borderRadius: 5, borderColor: '#fff', borderWidth: 2 },
+            data: [{value: 1048, name: '二手'}, {value: 735, name: '文创'}, {value: 580, name: '特产'}]
+        }]
+    };
+    pieChart.setOption(pieOption);
+</script>
+{% endblock %}

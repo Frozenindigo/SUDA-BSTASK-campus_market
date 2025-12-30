@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold mb-4">编辑商品</h2>
+            
+            <form method="POST" class="card p-4">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">商品标题</label>
+                    <input type="text" name="title" class="form-control" value="{{ product.title }}" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">价格</label>
+                    <input type="number" name="price" class="form-control" step="0.01" value="{{ product.price }}" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">商品分类</label>
+                    <select name="category" class="form-select" required>
+                        <option value="second" {% if product.category == 'second' %}selected{% endif %}>二手闲置 (孤品)</option>
+                        <option value="creative" {% if product.category == 'creative' %}selected{% endif %}>校园文创 (设计)</option>
+                        <option value="agri" {% if product.category == 'agri' %}selected{% endif %}>助农特产 (食品)</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">图片链接</label>
+                    <input type="url" name="image_url" class="form-control" value="{{ product.image_url }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">商品描述</label>
+                    <textarea name="desc" class="form-control" rows="5" required>{{ product.attributes.get('desc', '') }}</textarea>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">保存修改</button>
+                    <a href="{{ url_for('seller.dashboard') }}" class="btn btn-secondary">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
