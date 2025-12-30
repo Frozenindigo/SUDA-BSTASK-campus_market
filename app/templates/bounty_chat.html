@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- 悬赏信息卡片 -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">
+                                <i class="bi bi-star-fill"></i> {{ bounty.title }}
+                            </h5>
+                            <small>预算: ¥{{ bounty.budget }}</small>
+                        </div>
+                        <span class="badge bg-{% if bounty.status == 0 %}secondary{% elif bounty.status == 1 %}primary{% elif bounty.status == 2 %}success{% else %}danger{% endif %}">
+                            {{ bounty.status_text() }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>需求描述：</strong></p>
+                    <p class="text-muted">{{ bounty.desc }}</p>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>发布者：</strong> {{ bounty.author.username }}</p>
+                            <p class="mb-0"><small class="text-muted">发布时间: {{ bounty.created_at.strftime('%Y-%m-%d %H:%M') }}</small></p>
+                        </div>
+                        {% if bounty.accepter %}
+                        <div class="col-md-6 text-md-end">
+                            <p class="mb-1"><strong>接单者：</strong> {{ bounty.accepter.username }}</p>
+                            <p class="mb-0"><small class="text-muted">接单时间: {{ bounty.accepted_at.strftime('%Y-%m-%d %H:%M') }}</small></p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 聊天区域 -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-chat-dots"></i> 
+                        与 {{ other_user.username }} 的对话
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="messages-container mb-3" style="max-height: 400px; overflow-y: auto; background: #f8f9fa; padding: 15px; border-radius: 10px;" id="messagesContainer">
+                        {% for msg in messages %}
+                        <div class="mb-3 {% if msg.sender_id == current_user.id %}text-end{% endif %}">
+                            <div class="d-inline-block p-3 rounded {% if msg.sender_id == current_user.id %}bg-primary text-white{% else %}bg-white border{% endif %}"
+                                 style="max-width: 70%;">
+                                <p class="mb-1">{{ msg.content }}</p>
+                                <small class="{% if msg.sender_id == current_user.id %}text-white-50{% else %}text-muted{% endif %}">
+                                    {{ msg.created_at.strftime('%m-%d %H:%M') }}
+                                </small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if bounty.status == 1 %}
+                    <form id="messageForm" onsubmit="sendMessage(event)">
+                        <div class="input-group">
+                            <input type="text" 
+                                   class="form-control" 
+                                   placeholder="发送消息..."
+                                   id="messageInput"
+                                   required>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i> 发送
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-info mb-0">
+                        该悬赏已{{ bounty.status_text() }}，无法继续沟通
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 创建订单区域（仅发布者可见） -->
+            {% if is_author and bounty.status == 1 %}
+            <div class="card mt-4">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-cart-check"></i> 确认下单
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">沟通好后，填写收货信息确认下单，订单创建后悬赏将自动完成</p>
+                    <form id="orderForm" onsubmit="createOrder(event)">
+                        <div class="mb-3">
+                            <label class="form-label">最终价格</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="finalPrice"
+                                   step="0.01"
+                                   value="{{ bounty.budget }}"
+                                   required>
+                            <small class="text-muted">可以根据沟通结果调整价格</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">收货地址</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="orderAddress"
+                                   placeholder="请输入收货地址"
+                                   required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">联系方式</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="orderContact"
+                                   placeholder="请输入联系电话"
+                                   required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-check-circle"></i> 确认下单并完成悬赏
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 返回按钮 -->
+            <div class="mt-4 text-center">
+                <a href="{{ url_for('buyer.my_bounties') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 返回我的悬赏
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 发送消息
+function sendMessage(event) {
+    event.preventDefault();
+    const input = document.getElementById('messageInput');
+    const content = input.value.trim();
+    
+    if (!content) return;
+    
+    fetch('/send_bounty_message/{{ bounty.id }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({content: content})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            input.value = '';
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('发送失败');
+    });
+}
+
+// 创建订单
+function createOrder(event) {
+    event.preventDefault();
+    
+    const price = document.getElementById('finalPrice').value;
+    const address = document.getElementById('orderAddress').value;
+    const contact = document.getElementById('orderContact').value;
+    
+    if (!confirm(`确认以 ¥${price} 创建订单吗？订单创建后悬赏将自动完成。`)) {
+        return;
+    }
+    
+    fetch('/create_bounty_order/{{ bounty.id }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            price: price,
+            address: address,
+            contact: contact
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.href = '/my_orders';
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('创建订单失败');
+    });
+}
+
+// 自动滚动到底部
+const container = document.getElementById('messagesContainer');
+if (container) {
+    container.scrollTop = container.scrollHeight;
+}
+</script>
+{% endblock %}
