@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="fw-bold mb-4">
+        <i class="bi bi-star-fill"></i> 我的悬赏
+    </h2>
+
+    <!-- 导航标签 -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#posted" type="button">
+                我发布的 ({{ posted_bounties|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#accepted" type="button">
+                我接单的 ({{ accepted_bounties|length }})
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- 我发布的悬赏 -->
+        <div class="tab-pane fade show active" id="posted">
+            {% if posted_bounties %}
+            <div class="row g-4">
+                {% for bounty in posted_bounties %}
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="mb-0">{{ bounty.title }}</h5>
+                                        <span class="badge bg-{% if bounty.status == 0 %}secondary{% elif bounty.status == 1 %}primary{% elif bounty.status == 2 %}success{% else %}danger{% endif %} ms-2">
+                                            {{ bounty.status_text() }}
+                                        </span>
+                                    </div>
+                                    <p class="text-muted mb-2">{{ bounty.desc[:100] }}{% if bounty.desc|length > 100 %}...{% endif %}</p>
+                                    <div class="d-flex gap-3 text-muted small">
+                                        <span><i class="bi bi-cash"></i> 预算: ¥{{ bounty.budget }}</span>
+                                        <span><i class="bi bi-clock"></i> {{ bounty.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                        {% if bounty.accepter %}
+                                        <span><i class="bi bi-person"></i> 接单者: {{ bounty.accepter.username }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end d-flex flex-column justify-content-center gap-2">
+                                    {% if bounty.status == 1 %}
+                                    <a href="{{ url_for('buyer.bounty_chat', bounty_id=bounty.id) }}" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-chat-dots"></i> 进入沟通
+                                    </a>
+                                    {% elif bounty.status == 0 %}
+                                    <button class="btn btn-danger btn-sm" onclick="cancelBounty({{ bounty.id }})">
+                                        <i class="bi bi-x-circle"></i> 取消悬赏
+                                    </button>
+                                    {% elif bounty.status == 2 %}
+                                    <a href="{{ url_for('buyer.my_orders') }}" class="btn btn-success btn-sm">
+                                        <i class="bi bi-check-circle"></i> 查看订单
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-star display-1 text-muted"></i>
+                <p class="text-muted mt-3">您还没有发布过悬赏</p>
+                <a href="{{ url_for('buyer.post_bounty') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> 发布悬赏
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 我接单的悬赏 -->
+        <div class="tab-pane fade" id="accepted">
+            {% if accepted_bounties %}
+            <div class="row g-4">
+                {% for bounty in accepted_bounties %}
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="mb-0">{{ bounty.title }}</h5>
+                                    <span class="badge bg-{% if bounty.status == 1 %}primary{% elif bounty.status == 2 %}success{% else %}danger{% endif %} ms-2">
+                                        {{ bounty.status_text() }}
+                                    </span>
+                                </div>
+                                <p class="text-muted mb-2">{{ bounty.desc[:100] }}{% if bounty.desc|length > 100 %}...{% endif %}</p>
+                                <div class="d-flex gap-3 text-muted small">
+                                    <span><i class="bi bi-cash"></i> 预算: ¥{{ bounty.budget }}</span>
+                                    <span><i class="bi bi-person"></i> 发布者: {{ bounty.author.username }}</span>
+                                    <span><i class="bi bi-clock"></i> 接单时间: {{ bounty.accepted_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-md-end d-flex flex-column justify-content-center gap-2">
+                                {% if bounty.status == 1 %}
+                                <a href="{{ url_for('buyer.bounty_chat', bounty_id=bounty.id) }}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-chat-dots"></i> 进入沟通
+                                </a>
+                                {% elif bounty.status == 2 %}
+                                <span class="badge bg-success">已完成</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-star display-1 text-muted"></i>
+                <p class="text-muted mt-3">您还没有接过悬赏</p>
+                <a href="{{ url_for('buyer.index') }}" class="btn btn-primary">去接单</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function cancelBounty(bountyId) {
+    if (!confirm('确定要取消这个悬赏吗？')) {
+        return;
+    }
+    
+    fetch(`/cancel_bounty/${bountyId}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('操作失败');
+    });
+}
+</script>
+{% endblock %}
