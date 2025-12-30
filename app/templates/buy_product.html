@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold mb-4">确认订单</h2>
+            
+            <div class="card p-4 mb-4">
+                <div class="d-flex gap-3">
+                    <img src="{{ product.image_url }}" class="rounded" width="120" height="120" style="object-fit: cover;">
+                    <div class="flex-fill">
+                        <h5 class="fw-bold">{{ product.title }}</h5>
+                        <p class="text-muted mb-2">{{ product.attributes.get('desc', '') }}</p>
+                        <p class="text-primary fs-4 fw-bold mb-0">¥ {{ product.price }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="POST" class="card p-4">
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">收货地址</label>
+                    {{ form.address(class="form-control", placeholder="请输入详细地址") }}
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">联系方式</label>
+                    {{ form.contact(class="form-control", placeholder="手机号或微信号") }}
+                </div>
+                
+                <div class="d-flex gap-2">
+                    {{ form.submit(class="btn btn-primary btn-lg flex-fill") }}
+                    <a href="{{ url_for('buyer.product_detail', product_id=product.id) }}" class="btn btn-secondary">返回</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

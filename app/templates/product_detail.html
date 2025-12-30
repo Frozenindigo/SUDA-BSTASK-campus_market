@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row g-5">
+        <div class="col-lg-7">
+            <div class="card p-2 mb-4 overflow-hidden">
+                <img src="{{ product.image_url }}" class="rounded-4 w-100" style="height: 500px; object-fit: cover;">
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h1 class="fw-bold display-5">{{ product.title }}</h1>
+                <span class="badge bg-primary fs-5 px-3 py-2 rounded-pill">¥ {{ product.price }}</span>
+            </div>
+            
+            <p class="lead text-muted">{{ product.attributes.get('desc', '卖家太懒了，没有描述...') }}</p>
+            
+            <div class="d-flex gap-2 mb-5">
+                <span class="badge bg-dark border border-secondary px-3 py-2">
+                    <i class="bi bi-tag-fill me-1"></i> {{ product.category }}
+                </span>
+                <span class="badge bg-dark border border-secondary px-3 py-2">
+                    <i class="bi bi-clock me-1"></i> 发布于 {{ product.timestamp.strftime('%Y-%m-%d') }}
+                </span>
+                {% if product.status == 0 %}
+                <span class="badge bg-warning text-dark px-3 py-2">
+                    <i class="bi bi-eye-slash me-1"></i> 已下架
+                </span>
+                {% elif product.status == 2 %}
+                <span class="badge bg-info px-3 py-2">
+                    <i class="bi bi-clock-history me-1"></i> 已下单
+                </span>
+                {% elif product.status == 3 %}
+                <span class="badge bg-success px-3 py-2">
+                    <i class="bi bi-check-circle me-1"></i> 已售出
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- 买家与卖家沟通区域 -->
+            {% if current_user.is_authenticated and current_user.id != product.seller_id and messages %}
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-chat-dots"></i> 与卖家的对话
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="messages-container mb-3" style="max-height: 300px; overflow-y: auto;" id="messagesContainer">
+                        {% for msg in messages %}
+                        <div class="mb-3 {% if msg.sender_id == current_user.id %}text-end{% endif %}">
+                            <div class="d-inline-block p-3 rounded {% if msg.sender_id == current_user.id %}bg-primary text-white{% else %}bg-light{% endif %}"
+                                 style="max-width: 70%;">
+                                {% if msg.message_type == 'price_offer' %}
+                                <div class="mb-2">
+                                    <i class="bi bi-tag"></i> 
+                                    <strong>议价: ¥{{ msg.offer_price }}</strong>
+                                </div>
+                                {% endif %}
+                                <p class="mb-1">{{ msg.content }}</p>
+                                <small class="{% if msg.sender_id == current_user.id %}text-white-50{% else %}text-muted{% endif %}">
+                                    {{ msg.created_at.strftime('%m-%d %H:%M') }}
+                                </small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <form id="messageForm" onsubmit="sendMessage(event)">
+                        <div class="input-group">
+                            <input type="text" 
+                                   class="form-control" 
+                                   placeholder="发送消息..."
+                                   id="messageInput"
+                                   required>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <h4 class="fw-bold mb-4">💬 买家评价 ({{ reviews|length }})</h4>
+            <div class="card p-4 border-0 bg-transparent">
+                {% for r in reviews %}
+                <div class="d-flex gap-3 mb-4 pb-4 border-bottom border-secondary">
+                    <img src="{{ r.buyer.avatar }}" class="rounded-circle" width="50" height="50">
+                    <div>
+                        <div class="fw-bold">{{ r.buyer.username }}</div>
+                        <div class="star-rating mb-1">
+                            {% for i in range(r.rating) %}⭐{% endfor %}
+                        </div>
+                        <p class="text-muted small m-0">{{ r.content }}</p>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted">暂无评价，快来抢沙发！</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="sticky-top" style="top: 120px;">
+                <div class="card p-4 mb-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <img src="{{ product.seller.avatar }}" class="rounded-circle border border-2 border-primary" width="70" height="70">
+                        <div>
+                            <h5 class="fw-bold m-0">{{ product.seller.username }}</h5>
+                            <div class="seller-badge mt-1">
+                                <i class="bi bi-shield-check-fill text-success"></i> 
+                                信誉分: {{ product.seller.credit_score }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center g-2 mb-3">
+                        <div class="col bg-dark rounded-3 py-2 mx-1">
+                            <div class="fw-bold fs-4">{{ product.seller.average_rating() }}</div>
+                            <div class="small text-muted">评分</div>
+                        </div>
+                        <div class="col bg-dark rounded-3 py-2 mx-1">
+                            <div class="fw-bold fs-4">{{ product.seller.products|length }}</div>
+                            <div class="small text-muted">在售</div>
+                        </div>
+                    </div>
+                    
+                    {% if current_user.is_authenticated and current_user.id != product.seller_id %}
+                        {% if product.status == 1 %}
+                        <button class="btn btn-primary w-100 py-3 fs-5 shadow-lg mb-2" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                            立即购买
+                        </button>
+                        <button class="btn btn-outline-primary w-100 py-2 mb-2" id="addToCartBtn" data-product-id="{{ product.id }}">
+                            <i class="bi bi-cart-plus me-2"></i>加入购物车
+                        </button>
+                        
+                        <!-- 咨询卖家按钮 -->
+                        <button class="btn btn-outline-info w-100 py-2 mb-2" data-bs-toggle="modal" data-bs-target="#chatModal">
+                            <i class="bi bi-chat-dots me-2"></i>咨询卖家
+                        </button>
+                        
+                        <!-- 议价按钮 -->
+                        <button class="btn btn-outline-warning w-100 py-2 mb-2" data-bs-toggle="modal" data-bs-target="#offerModal">
+                            <i class="bi bi-tag me-2"></i>议价
+                        </button>
+                        
+                        <button class="btn btn-outline-danger w-100 py-2" id="favoriteBtn" data-product-id="{{ product.id }}">
+                            <i class="bi {% if is_favorited %}bi-heart-fill{% else %}bi-heart{% endif %}" id="favoriteIcon"></i>
+                            <span id="favoriteText">{% if is_favorited %}已收藏{% else %}收藏{% endif %}</span>
+                        </button>
+                        {% else %}
+                        <div class="alert alert-warning mb-2">
+                            该商品暂时无法购买
+                        </div>
+                        {% endif %}
+                    {% elif not current_user.is_authenticated %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary w-100 py-3 fs-5 shadow-lg">
+                        登录后购买
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <div class="alert alert-secondary border-0 small">
+                    <i class="bi bi-shield-lock me-2"></i> 平台担保交易，确认收货后卖家才能收款。
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 支付模态框 -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">安全收银台</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="credit-card-bg shadow-lg">
+                    <div class="d-flex justify-content-between mb-4">
+                        <span>CampusPay</span>
+                        <i class="bi bi-wifi"></i>
+                    </div>
+                    <div class="fs-4 mb-3">**** **** **** 8888</div>
+                    <div class="d-flex justify-content-between small opacity-75">
+                        <span>CARD HOLDER<br>{{ current_user.username if current_user.is_authenticated else 'Guest' }}</span>
+                        <span>EXPIRES<br>12/28</span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <span class="text-muted">支付金额</span>
+                    <span class="fs-2 fw-bold">¥ {{ product.price }}</span>
+                </div>
+
+                <a href="{{ url_for('buyer.buy_product', product_id=product.id) }}" class="btn btn-success w-100 py-3 fw-bold rounded-pill">
+                    <i class="bi bi-fingerprint me-2"></i> 确认下单
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 咨询卖家模态框 -->
+<div class="modal fade" id="chatModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-chat-dots"></i> 咨询卖家
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="chatForm" onsubmit="sendChatMessage(event)">
+                    <div class="mb-3">
+                        <label class="form-label">发送消息</label>
+                        <textarea class="form-control" 
+                                  rows="4" 
+                                  id="chatContent"
+                                  placeholder="询问商品详情、使用情况等..."
+                                  required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-send"></i> 发送
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 议价模态框 -->
+<div class="modal fade" id="offerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-tag"></i> 议价
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="offerForm" onsubmit="sendOffer(event)">
+                    <div class="mb-3">
+                        <label class="form-label">原价</label>
+                        <input type="text" class="form-control" value="¥ {{ product.price }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">您的出价</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="offerPrice"
+                               step="0.01"
+                               min="0.01"
+                               placeholder="请输入您的出价"
+                               required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">留言说明（可选）</label>
+                        <textarea class="form-control" 
+                                  rows="3" 
+                                  id="offerNote"
+                                  placeholder="说明您的议价理由..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="bi bi-tag"></i> 发送议价
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 收藏功能
+document.getElementById('favoriteBtn')?.addEventListener('click', function() {
+    const productId = this.dataset.productId;
+    fetch(`/favorite/${productId}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(res => res.json())
+    .then(data => {
+        const icon = document.getElementById('favoriteIcon');
+        const text = document.getElementById('favoriteText');
+        if (data.action === '收藏') {
+            icon.className = 'bi bi-heart-fill';
+            text.textContent = '已收藏';
+        } else {
+            icon.className = 'bi bi-heart';
+            text.textContent = '收藏';
+        }
+    });
+});
+
+// 加入购物车
+document.getElementById('addToCartBtn')?.addEventListener('click', function() {
+    const productId = this.dataset.productId;
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>添加中...';
+    
+    fetch(`/add_to_cart/${productId}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>已添加';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-success');
+            
+            fetch('/cart/count')
+                .then(res => res.json())
+                .then(data => {
+                    const badge = document.getElementById('cartBadge');
+                    if (data.count > 0) {
+                        badge.textContent = data.count;
+                        badge.style.display = 'block';
+                    }
+                });
+            
+            setTimeout(() => {
+                btn.innerHTML = '<i class="bi bi-cart-plus me-2"></i>加入购物车';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+                btn.disabled = false;
+            }, 2000);
+        } else {
+            alert(data.message || '添加失败');
+            btn.innerHTML = '<i class="bi bi-cart-plus me-2"></i>加入购物车';
+            btn.disabled = false;
+        }
+    })
+    .catch(err => {
+        alert('添加失败，请重试');
+        btn.innerHTML = '<i class="bi bi-cart-plus me-2"></i>加入购物车';
+        btn.disabled = false;
+    });
+});
+
+// 发送消息（在对话框中）
+function sendMessage(event) {
+    event.preventDefault();
+    const input = document.getElementById('messageInput');
+    const content = input.value.trim();
+    
+    if (!content) return;
+    
+    fetch('/send_message/{{ product.id }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({content: content})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            input.value = '';
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        alert('发送失败');
+    });
+}
+
+// 发送咨询消息
+function sendChatMessage(event) {
+    event.preventDefault();
+    const content = document.getElementById('chatContent').value.trim();
+    
+    if (!content) return;
+    
+    fetch('/send_message/{{ product.id }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({content: content})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('消息已发送！');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('chatModal'));
+            modal.hide();
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        alert('发送失败');
+    });
+}
+
+// 发送议价
+function sendOffer(event) {
+    event.preventDefault();
+    const offerPrice = document.getElementById('offerPrice').value;
+    const content = document.getElementById('offerNote').value.trim();
+    
+    if (!offerPrice || parseFloat(offerPrice) <= 0) {
+        alert('请输入有效的出价');
+        return;
+    }
+    
+    fetch('/send_price_offer/{{ product.id }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            offer_price: offerPrice,
+            content: content || `我想以 ¥${offerPrice} 的价格购买`
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('议价请求已发送，请等待卖家回复！');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('offerModal'));
+            modal.hide();
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        alert('发送失败');
+    });
+}
+
+// 自动滚动消息到底部
+const messagesContainer = document.getElementById('messagesContainer');
+if (messagesContainer) {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+</script>
+
+<style>
+.credit-card-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 20px;
+    margin-bottom: 30px;
+}
+
+.messages-container {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+}
+</style>
+{% endblock %}

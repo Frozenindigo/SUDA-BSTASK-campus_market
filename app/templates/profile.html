@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card p-4 text-center">
+                <img src="{{ current_user.avatar }}" class="rounded-circle mx-auto mb-3" width="120" height="120" style="object-fit: cover;">
+                <h4 class="fw-bold">{{ current_user.username }}</h4>
+                <p class="text-muted small">{{ '认证卖家' if current_user.role == 'seller' else '普通买家' }}</p>
+                <div class="badge bg-primary mb-3">信誉分：{{ current_user.credit_score }}</div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card p-4 mb-4">
+                <h5 class="fw-bold mb-4">个人资料</h5>
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        <label class="form-label">用户名</label>
+                        {{ form.username(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">邮箱</label>
+                        {{ form.email(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">头像链接</label>
+                        {{ form.avatar(class="form-control") }}
+                    </div>
+                    {{ form.submit(class="btn btn-primary") }}
+                </form>
+            </div>
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card p-4 text-center">
+                        <i class="bi bi-bag display-4 text-primary mb-2"></i>
+                        <h3 class="fw-bold">{{ orders_count }}</h3>
+                        <p class="text-muted mb-0">我的订单</p>
+                        <a href="{{ url_for('buyer.my_orders') }}" class="btn btn-sm btn-outline-primary mt-2">查看</a>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card p-4 text-center">
+                        <i class="bi bi-heart display-4 text-danger mb-2"></i>
+                        <h3 class="fw-bold">{{ favorites_count }}</h3>
+                        <p class="text-muted mb-0">我的收藏</p>
+                        <a href="{{ url_for('buyer.my_favorites') }}" class="btn btn-sm btn-outline-danger mt-2">查看</a>
+                    </div>
+                </div>
+                {% if current_user.role == 'seller' %}
+                <div class="col-md-6">
+                    <div class="card p-4 text-center">
+                        <i class="bi bi-box display-4 text-success mb-2"></i>
+                        <h3 class="fw-bold">{{ products_count }}</h3>
+                        <p class="text-muted mb-0">我的发布</p>
+                        <a href="{{ url_for('buyer.my_products') }}" class="btn btn-sm btn-outline-success mt-2">查看</a>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="col-md-6">
+                    <div class="card p-4 text-center">
+                        <i class="bi bi-bullseye display-4 text-warning mb-2"></i>
+                        <h3 class="fw-bold">{{ bounties_count }}</h3>
+                        <p class="text-muted mb-0">我的悬赏</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

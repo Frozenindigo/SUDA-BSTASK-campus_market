@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h2 class="fw-bold mb-4">确认订单</h2>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">商品清单</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in cart_items %}
+                    <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                        <img src="{{ item.product.image_url }}" class="rounded" width="80" height="80" style="object-fit: cover;">
+                        <div class="flex-fill">
+                            <h6 class="fw-bold mb-1">{{ item.product.title }}</h6>
+                            <p class="text-muted small mb-0">数量：{{ item.quantity }} × ¥{{ item.product.price }}</p>
+                        </div>
+                        <div class="text-primary fw-bold">¥ {{ item.product.price * item.quantity }}</div>
+                    </div>
+                    {% endfor %}
+                    <div class="d-flex justify-content-between mt-3 pt-3 border-top">
+                        <span class="fs-5 fw-bold">总计：</span>
+                        <span class="text-primary fs-4 fw-bold">¥ {{ total_price }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="POST" class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">收货信息</h5>
+                </div>
+                <div class="card-body">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">收货地址</label>
+                        {{ form.address(class="form-control", placeholder="请输入详细地址") }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">联系方式</label>
+                        {{ form.contact(class="form-control", placeholder="手机号或微信号") }}
+                    </div>
+                    <div class="d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary btn-lg flex-fill") }}
+                        <a href="{{ url_for('buyer.cart') }}" class="btn btn-secondary btn-lg">返回购物车</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
